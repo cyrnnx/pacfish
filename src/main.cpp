@@ -1,53 +1,40 @@
 #include <SFML/Graphics.hpp>
-#include "ResourcePath.h"h1
+#include "ResourcePath.h"
+#include "Overlap.h"
+#include <cstdlib>
+using namespace std;
 
-void movement(sf::Sprite&, sf::RenderWindow&);
-void walls(sf::Sprite&);
-
-
-int main()
+void handleEvent(sf::RenderWindow& window)
 {
-	sf::RenderWindow window(sf::VideoMode(800, 600), "Movement");
-
-
-	sf::Texture characterTexture;
-	characterTexture.loadFromFile(resourcePath() + "Images/alien.jpg");
-	sf::Sprite characterSprite;
-	characterSprite.setTexture(characterTexture);
-	characterSprite.setPosition(400, 300);
-
-	sf::Texture wall1Texture;
-	wall1Texture.loadFromFile(resourcePath() + "Images/wall1.png");
-	sf::Sprite wall1;
-	wall1.setTexture(wall1Texture);
-
-
-
-
-	while (window.isOpen())
+	sf::Event event;
+	while (window.pollEvent(event))
 	{
-		sf::Event event;
-		while (window.pollEvent(event))
-		{
-			if (event.type == sf::Event::Closed)
-				window.close();
-		}
-
-		window.clear();
-		window.draw(characterSprite);
-		movement(characterSprite, window);
-		walls(wall1);
-		window.display();
-
+		if (event.type == sf::Event::Closed)
+			window.close();
 	}
-
-	return 0;
 }
 
+void draw(sf::RenderWindow& window, sf::Sprite& PacFish, sf::Sprite& Wall1)
+{
+	window.clear();
+	window.draw(PacFish);
+	window.draw(Wall1);
+	window.display();
+}
 
-void movement(sf::Sprite& character, sf::RenderWindow& window)
+void handleCollision(sf::Sprite& PacFish, sf::Sprite& Wall1, sf::Vector2f& position)
+{
+	if (overlap(PacFish, Wall1))
+	{
+		PacFish.setPosition(position);
+
+	}
+}
+
+void movement(sf::Sprite& PacFish, sf::RenderWindow& window, sf::Sprite& Wall1)
 {
 	float moveSpeed = 0.1, moveSpeedR = -0.1;
+	sf::Vector2f currentPos = PacFish.getPosition();
 
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift))
 	{
@@ -57,29 +44,51 @@ void movement(sf::Sprite& character, sf::RenderWindow& window)
 
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Z))
 	{
-		moveSpeed *= 2.2;
-		moveSpeedR *= 2.2;
+		moveSpeed *= 50;
+		moveSpeedR *= 50;
 	}
 
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
 	{
-		character.move(0, moveSpeedR);
+		PacFish.move(0, moveSpeedR);
 	}
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
 	{
-		character.move(0, moveSpeed);
+		PacFish.move(0, moveSpeed);
 	}
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
 	{
-		character.move(moveSpeed, 0);
+		PacFish.move(moveSpeed, 0);
 	}
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
 	{
-		character.move(moveSpeedR, 0);
+		PacFish.move(moveSpeedR, 0);
 	}
+
+	handleCollision(PacFish, Wall1, currentPos);
 }
 
-void walls(sf::Sprite& wall1)
+int main()
 {
+	sf::RenderWindow window(sf::VideoMode(800, 600), "Movement");
+	sf::Texture Fish;
+	Fish.loadFromFile(resourcePath() + "assets/sprites/character_sprite2.png");
+	sf::Sprite PacFish;
+	PacFish.setTexture(Fish);
+	PacFish.setPosition(100, 300);
+	PacFish.scale(0.05, 0.05);
 
+
+	sf::Texture Wall;
+	Wall.loadFromFile(resourcePath() + "assets/sprites/wall.jpg");
+	sf::Sprite Wall1(Wall);
+	Wall1.setPosition(200, 200);
+	Wall1.scale(0.3, 0.3);
+
+	while (window.isOpen())
+	{
+		draw(window, PacFish, Wall1);
+		movement(PacFish, window, Wall1);
+	}
+	return 0;
 }
